@@ -1,0 +1,375 @@
+---
+title: "Proyecto Programación en R"
+author: "Andrés Castañeda Low"
+date: "2025-05-23"
+output:
+  pdf_document: default
+  Trabajo programacion en R: default
+---
+#Introducción 
+
+Un modelo es un esquema teórico de un sistema o de una realidad, que se realizan para una mejor comprensión y estudio de las
+especies. Al utilizar técnicas de estadística y SIG, se pueden generar
+interpretaciones que nos permiten tomar decisiones sobre la gestión de
+la biodiversidad, convirtiéndose en una herramienta para el diagnóstico
+y predicción. El modelamiento de la distribución de especies es una
+herramienta útil para determinar las áreas en donde exista la mayor
+probabilidad de encontrar una especie en un sector. A través de estas
+técnicas se muestra la idoneidad del medio ambiente para que se pueda
+desarrollar una especie o comunidad a partir de datos de observaciones
+en campos y una serie de variables ambientales (Elith & Leathwick,
+2007). Se tiene una base de datos de la presencia de las dos especies de
+reptiles en la Región de Tarapacá, dentro del proyecto TEA
+
+#Objetivo
+
+Estimar en donde se encuentre una alta probabilidad de tener
+las condiciones ambientales que permitan la presencian de las especies
+Phyllodactylus gerrhopygus & Liolaemus stolzmanni y su distribución en
+la Región de Tarapacá y las Área de Mina del proyecto TEA, utilizando
+los paquetes de RStudio “ggplot2” para la visualización de los datos y
+“tidyverse” para el ordenamiento y selección de las variables.
+
+#Procesamiento de datos 
+
+Para la selección y ordenamiento de los datos se
+utiliza el paquete “tidyverse” y para visualización de datos utilizo una
+serie de paquetes para ello. En el análisis inicial de los datos se
+encuentran las siguientes variables:
+
+```{r}
+install.packages("tidyverse")
+```
+
+```{r}
+install.packages("ggplot2")
+```
+
+#Analisis de Datos
+Una vez instalados los paquetes se procede a llamar a
+la libreria.
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+```
+
+se carga la base de datos:
+
+```{r}
+library(readxl)
+Reptiles_v3 <- read_excel("Reptiles v3.xlsx")
+view(Reptiles_v3)
+```
+
+Una vez cargada la base de datos, se inicia el analisis exploratorio de
+estos.
+
+```{r}
+summary(Reptiles_v3)
+```
+
+Al aplicar la función summary, nos dice que el data frame contiene 9 variables y 790 filas, no todas las variables contienen la misma cantidad de datos.
+
+```{r}
+ggplot(data = Reptiles_v3) +
+  geom_bar(mapping = aes(x = Especie))
+```
+
+La primera impresión nos muestra, que una especie es predominante en cuanto a su abundancia.
+
+```{r}
+Reptiles_v3 %>% 
+  count(Especie)
+```
+
+El siguiente diagrama nos indica la dispersión de los reptiles por las área del proyecto.
+
+```{r}
+Reptiles_v3 %>% 
+  count(Especie, `Área de Mina`) %>%  
+  ggplot(mapping = aes(x = Especie, y = `Área de Mina`)) +
+  geom_tile(mapping = aes(fill = n))
+```
+
+Se cargan los siguientes paquetes para las graficas:
+
+```{r}
+library(ggmosaic)
+
+library(treemapify)
+
+library(scales)
+
+library(ggridges)
+```
+
+Se genera un grafico de barras, para ver inicialmente donde es la distribución de los reptiles por las áreas del proyecto.
+
+```{r}
+ggplot(Reptiles_v3, aes(x = `Área de Mina`)) + geom_bar()
+```
+
+Se crea el siguente codigo, para poder realizar un diagra de arbol con la data de los reptiles y su distribución en las áreas de mina.
+
+```{r}
+graph_arbol <- Reptiles_v3 %>% count(`Área de Mina`)
+```
+
+El grafico de arbol, nos indica en proporción donde se encuentran la mayor abundancia de individuos en el área del proyecto.
+
+```{r}
+ggplot(graph_arbol,
+       aes(fill = `Área de Mina`, area=n)) +
+  geom_treemap() +
+  labs(title = "Areas de mina")
+```
+
+Para una mejor visualización se integró la leyenda dentro del grafico.
+
+```{r}
+ggplot(graph_arbol,
+       aes(fill = `Área de Mina`, area=n, label= `Área de Mina`)) +
+  geom_treemap() + geom_treemap_text(colour="white",
+                                     place = "centre") +
+  labs(title = "Areas de mina") +
+  theme(legend.position = "none")
+```
+
+Se realiza un conteo de las especies distribuidas por el área mina.
+
+```{r}
+Reptiles_v3 %>% select(Especie, `Área de Mina`)
+```
+
+Se selecciona una de las especies para analizar su distribución en el área del proyecto.
+
+```{r}
+geko<-Reptiles_v3 %>% select(Especie, `Área de Mina`) %>% filter(Especie=="Phyllodactylus gerrhopygus")
+```
+
+Se grafica su distribución en las áreas del proyecto
+
+```{r}
+geko<-Reptiles_v3 %>% select(Especie, `Área de Mina`) %>% filter(Especie=="Phyllodactylus gerrhopygus")
+
+```
+
+Se realiza lo mismo con la otra especie.
+
+```{r}
+dragon<-Reptiles_v3 %>% select(Especie, `Área de Mina`) %>% filter(Especie=="Liolaemus stolzmanni")
+```
+
+Se grafica su distribución.
+
+```{r}
+ggplot(dragon, aes(x = `Área de Mina`)) + geom_bar()
+```
+
+Con la función geom_jitter se puede ver la dispersión de individuos en las áreas del proyecto.
+
+```{r}
+ggplot(Reptiles_v3, aes(Especie, `Área de Mina`)) +
+  geom_jitter(alpha = 0.05)
+```
+
+Luego de haber analizados las variales cualitativas, se analizan las variales continuas que presenta este data frame.
+Las variables númericas corresponden al Peso (g) y Largo (cm).
+
+El grafico de dispersión muestran la correlación entre dos variables. Existe correlación cuando los puntos se concentran cerca de una línea recta, mientras que si se observa los puntos dispersos aleatoriamente sobre las coordenadas, entonces no existe correlación.
+El tamaño de los puntos se puede controlar con size. El valor predeterminado de tamaño es 2; lo cambiaremos a 0.5 para tener puntos más pequeños.
+
+```{r}
+ggplot(Reptiles_v3,
+       aes(x = Peso,
+           y = Largo)) +
+  geom_point(color= "lightslategrey", size=0.5) +
+  geom_smooth(method = "lm", colour="black", size = 0.5) + ylim(0, 10)
+```
+
+El gráfico de cajas muestra también la distribución de los datos numéricos, sin embargo lo hace mediante el resumen de cinco números: el mínimo, primer cuartil, mediana, tercer cuartil y el máximo. Debido al resumen que realiza, el diagrama de cajas puede usarse para manejar una gran cantidad de datos. Además, muestra también los valores atípicos en caso los hubiera.
+En este caso podemos ver que no existe diferencia en el peso entre ambas especies.
+
+```{r}
+ggplot(Reptiles_v3,
+       aes(x = Especie,
+           y = Peso)) +
+  geom_boxplot()
+```
+
+En el caso de la variable largo ocurre lo mismo, entre ambas especies no hay diferencias en tamaño.
+
+```{r}
+ggplot(Reptiles_v3,
+       aes(x = Especie,
+           y = Largo)) +
+  geom_boxplot()
+```
+
+En el caso de la variable largo ocurre lo mismo, entre ambas especies no hay diferencias en tamaño.
+
+```{r}
+ggplot(Reptiles_v3,
+       aes(x = Especie,
+           y = Largo)) +
+  geom_boxplot()
+```
+
+Una mejor visualización de la relación del peso entre ambas especies.
+
+```{r}
+ggplot(Reptiles_v3,
+       aes(x = Peso,
+           y = Especie,
+           fill = Especie)) +
+  geom_density_ridges() +
+  theme_ridges() +
+  theme(legend.position = "none")
+```
+
+Lo mismo para el largo de estas especies.
+
+```{r}
+ggplot(Reptiles_v3,
+       aes(x = Largo,
+           y = Especie,
+           fill = Especie)) +
+  geom_density_ridges() +
+  theme_ridges() +
+  theme(legend.position = "none")
+```
+
+Los gráficos multivariados, como su mismo nombre lo indica, permiten visualizar las relaciones entre tres a más variables. 
+En este caso las variables son el peso, el largo y sexo.
+
+```{r}
+ggplot(Reptiles_v3,
+       aes(x = Peso,
+           y = Largo,
+           color = Sexo)) +
+  geom_point( size = 3,
+              alpha = .6) +
+  labs(title = "Sexo por el largo y peso de los reptiles") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Lo mismo se realiza para la fenología.
+
+```{r}
+ggplot(Reptiles_v3,
+       aes(x = Peso,
+           y = Largo,
+           color = Fenología)) +
+  geom_point( size = 3,
+              alpha = .6) +
+  labs(title = "Fenología por el largo y peso de los reptiles") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Tambien se le puede agregar una cuarta variable como es le sexo.
+
+```{r}
+ggplot(Reptiles_v3,
+       aes(x = Peso,
+           y = Largo,
+           color = Sexo, size = Fenología)) +
+  geom_point( alpha = .3) +
+  labs(title = "Sexo por el largo y peso de los reptiles") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Por ultimo se grafica en modo de barras la proporción de ambas especies por las áreas del proyecto.
+
+```{r}
+barras_segmentadas <- ggplot(Reptiles_v3,
+                             aes(x = `Área de Mina`,
+                                 fill = Especie)) +
+  geom_bar(position = "fill") +
+  labs(y = "Proporción", title = "Barras segmentadas") +
+  scale_fill_brewer(palette="Set2")
+
+barras_segmentadas
+```
+
+Y tambien se grafica en modos de barras la proporción de los estados fenologicos de cada especies.
+
+```{r}
+barras_segmentadas_2 <- ggplot(Reptiles_v3,
+                               aes(x = `Fenología`,
+                                   fill = Especie)) +
+  geom_bar(position = "fill") +
+  labs(y = "Proporción", title = "Barras segmentadas") +
+  scale_fill_brewer(palette="Set2")
+
+barras_segmentadas_2
+```
+
+#Planificación del proyecto
+
+Los modelos de distribución de especies son represetaciones cartográficas de la idoneidad de un espacio para la presencia de una especie en función de las variables empleadas para generar dicha representación (Mateo, Felicisimo, and Munoz 2011).
+
+La idioneidad no es mas que la relación matemática entre la distribucion real y unas varibles independientes que suelen ser topográficas, ambientales y geológicas.
+
+La variable dependiente es dicotómica (presencia/ausencia) y las independientes pueden ser cuantitativas (e.g., temperatura o elevación) o nominales (e.g., litología o uso del suelo).
+
+```{r}
+library(readxl)
+library(dplyr)
+library(sf)
+library(terra)
+library(geodata)
+library(biomod2)
+```
+
+Pasos para la realización de un modelo de distribución de especies
+
+Los datos conocidos sobre la distribucion de la especies se realacionan con los datos disponibles, si existe la realación se extrapola, comunmente la interperetación es erronea, pues se toma como la probabilidad de la especie en un punto, realmente es la similitud del lugar según las variables utilizadas (ej. condiciónes ambientales)
+```{r}
+
+#reptiles_sf <- st_as_sf(Reptiles_v3, coords = c("longitud", "latitud"), crs = 4326)
+```
+Iterpretaciónes de los modelos
+Modelos de idioneidad: Representa la distribución potencial de la especie
+
+Modelos del habitat potencial: El concepto puede aplicarse a la decripción de la asociación entre los organismos y las condiciónes ambientales.
+
+Modelos del nicho ecológico: La combinación de condiones ambientales que una especie puede tolerar.
+
+Variables dependientes
+Generalmenete se cuentan con datos de precensia, pocas veces con datos de ausencia y casi nunca cpn datos de abundancias.
+
+
+```{r}
+#Bioclimatic <- getData(name = "worldclim", var = "bio", res = 0.5, lon = -70, lat = -20)
+```
+Variables Independientes
+Son los datos climaticos, son buenos para determinar el patron general de la distribución de una especie a escalas grandes,sin embargo, a una escala mas reducida las causas de distribución puede ser atribuida la distribución de rescursos y a condiciónes microtopográficas en el ambiente; las variabes cambian según el objetivo, en todo caso es recomendable que tengan estas tres condiciónes:
+
+Relación potencial con la especie (explicativa).
+Variación significativa en el sitio.
+Sean independientes o con muy poca correlación.
+Métodos de modelación
+Tecnicas discriminantes: datos de ausecia y precencia (GAM, glm, Redes neuronales….)
+Tecnicas Descripitvias: datos de presencia
+Tecnicas mixtas: Utilzan varias reglas tanto descriptivas como discriminantes “modelos de concenso”
+
+```{r}
+#modelo_data <- BIOMOD_FormatingData( resp.var = reptiles_sf$Especie, expl.var = bioclim_raster, resp.xy = st_coordinates(reptiles_sf), PA.strategy = "random")
+
+```
+
+```{r}
+#modelo <- BIOMOD_Modeling( modeling.data = modelo_data, models = "MAXENT.Phillips", models.eval.meth = "ROC")
+```
+
+```{r}
+#prediccion <- BIOMOD_Projection(modelo, bioclim_raster)
+
+```
+
+```{r}
+#plot(prediccion)
+
+```
